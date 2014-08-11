@@ -2,6 +2,9 @@
 import logging
 import os
 import uuid
+import json
+import csv
+import xmltodict
 
 from django.core.files.storage import default_storage
 
@@ -100,15 +103,72 @@ class ProcessorInterface(object):
 
 
 class XmlProcessor(ProcessorInterface):
-    pass
+    def parse_file(self, path):
+        with open(path) as xml_file:
+            data = xmltodict.parse(xml_file)
+        return data
+
+    def convert(self, path, data):
+        if isinstance(data, list):
+            data = {'items': {str(k): v for k, v in enumerate(data)}}
+
+        try:
+            with open(path, 'w') as outfile:
+                xmltodict.unparse(data, outfile, pretty=True)
+        except Exception:
+            logger.exception(u'File `{}` can not be parsed in xml'.format(path))
+            os.remove(path)
+            raise
+        return path
 
 
 class JsonProcessor(ProcessorInterface):
-    pass
+    def parse_file(self, path):
+        with open(path) as json_file:
+            json_data = json.load(json_file)
+        return json_data
+
+    def convert(self, path,  data):
+        try:
+            with open(path, 'w') as outfile:
+                json.dump(data, outfile)
+        except Exception:
+            logger.exception(
+                u'File `{}` can not be parsed in json'.format(path)
+            )
+            os.remove(path)
+            raise
+        return path
 
 
 class CsvProcessor(ProcessorInterface):
-    pass
+    def parse_file(self, path):
+        data = []
+        with open(path, 'r') as csvfile:
+            # sniff to find the format
+            file_dialect = csv.Sniffer().sniff(csvfile.read(1024))
+            csvfile.seek(0)
+
+            # read the CSV file into a dictionary
+            dict_reader = csv.DictReader(csvfile, dialect=file_dialect)
+            for row in dict_reader:
+                data.append(row)
+        return data
+
+    def convert(self, path, data):
+        if isinstance(data, dict):
+            data = [data]
+
+        try:
+            with open(path, 'wb') as outfile:
+                dict_writer = csv.DictWriter(outfile, data[0].keys())
+                dict_writer.writeheader()
+                dict_writer.writerows(data)
+        except Exception:
+            logger.exception(u'File `{}` can not be parsed in csv'.format(path))
+            os.remove(path)
+            raise
+        return path
 
 
 processors = {

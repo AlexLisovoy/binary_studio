@@ -1,10 +1,49 @@
+{% load staticfiles i18n %}
 <!DOCTYPE html>
 <html>
-<head lang="en">
-    <meta charset="UTF-8">
-    <title></title>
-</head>
-<body>
 
-</body>
+    <head>
+        <meta charset="utf-8"/>
+        <title>{% trans 'Mini Ajax File Upload Form' %}</title>
+
+        <!-- Google web fonts -->
+        <link href="http://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700" rel='stylesheet' />
+
+        <!-- Font-Awesome -->
+        <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+
+        <!-- The main CSS file -->
+        <link href="{% static 'css/style.css' %}" rel="stylesheet" />
+    </head>
+
+    <body>
+        <section>
+            <form id="upload" method="post" action="{% url 'uploader' %}" enctype="multipart/form-data">
+                <div id="drop">
+                    {% trans 'Drop Here' %}
+
+                    <a href="#" class="btn">{% trans 'Browse' %}</a>
+                    <input type="file" name="the_file" multiple />
+                </div>
+                {% trans 'Supported files: json, xml, csv.' %}
+            </form>
+        </section>
+        <section>
+            <ul id="files">
+                <!-- The file uploads will be shown here -->
+            </ul>
+        </section>
+        <!-- JavaScript Includes -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/jquery.knob/1.2.9/jquery.knob.min.js"></script>
+
+        <!-- jQuery File Upload Dependencies -->
+        <script src="{% static 'js/jquery.ui.widget.js' %}"></script>
+        <script src="{% static 'js/jquery.iframe-transport.js' %}"></script>
+        <script src="{% static 'js/jquery.fileupload.js' %}"></script>
+
+        <!-- Our main JS file -->
+        <script src="{% static 'js/script.js' %}"></script>
+
+    </body>
 </html>

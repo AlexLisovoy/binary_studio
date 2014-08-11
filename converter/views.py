@@ -8,6 +8,8 @@ from django.views.generic import FormView
 from django.views.generic import View
 
 from .forms import UploadForm
+from .file_processor import upload_handler
+from .file_processor import get_file
 
 
 class JSONResponseMixin(object):
@@ -31,7 +33,7 @@ class UploadView(JSONResponseMixin, FormView):
         """
         Returns a JSON response, with url for access file.
         """
-        namespace = '8ed357be-af50-4729-ad09-4eee3e87a7d2'
+        namespace, filename = upload_handler(self.request.FILES['the_file'])
         access_url = reverse(
             'downloader', kwargs={'namespace': namespace}
         )
@@ -50,7 +52,15 @@ class DownloadView(JSONResponseMixin, View):
 
     def get(self, request, *args, **kwargs):
         context = {'status': True}
-        context['url'] = '/media/8ed357be-af50-4729-ad09-4eee3e87a7d2/example.json'
-        context['filename'] = 'example.json'
+
+        try:
+            filename, url = get_file(
+                kwargs.get('namespace'), request.GET.get('format')
+            )
+            context['url'] = url
+            context['filename'] = filename
+        except Exception:
+            context['status'] = False
+            context['error'] = u'Oops! Something went wrong.'
 
         return self.render_to_json_response(context)
